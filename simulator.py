@@ -2,6 +2,120 @@ import json
 import tkinter as tk
 from tkinter import ttk, messagebox
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.collections import LineCollection
+
+class DifferentialRobot:
+    def __init__(self, wheel_distance, time_step):
+        """
+        Inicializa o robô com os parâmetros básicos.
+
+        :param wheel_distance: Distância entre as rodas [m]
+        :param time_step: Intervalo de tempo [s]
+        """
+        self.l = wheel_distance
+        self.dt = time_step
+        self.x = [0]
+        self.y = [0]
+        self.theta = [0]
+
+    def calculate_trajectory(self, vr, vl):
+        """
+        Calcula a trajetória do robô dado os vetores de velocidades das rodas.
+
+        :param vr: Velocidades da roda direita [m/s]
+        :param vl: Velocidades da roda esquerda [m/s]
+        """
+        for i in range(len(vr)):
+            # Incremento de deslocamento linear e angular
+            delta_s = (vr[i] + vl[i]) / 2 * self.dt
+            delta_theta = (vr[i] - vl[i]) / (2 * self.l) * self.dt
+
+            # Calcular novos valores de x, y, e theta
+            x_new = self.x[-1] + delta_s * np.cos(self.theta[-1] + delta_theta / 2)
+            y_new = self.y[-1] + delta_s * np.sin(self.theta[-1] + delta_theta / 2)
+            theta_new = self.theta[-1] + delta_theta
+
+            # Atualizar as listas
+            self.x.append(x_new)
+            self.y.append(y_new)
+            self.theta.append(theta_new)
+
+    def calculate_circular_trajectory(self, radius, linear_velocity, direction="right", turns=1):
+        """
+        Calcula as velocidades das rodas para uma trajetória circular e
+        executa a simulação.
+
+        :param radius: Raio da trajetória circular [m]
+        :param linear_velocity: Velocidade linear desejada [m/s]
+        :param direction: Sentido de rotação da trajetória ("right" ou "left")
+        :param turns: Número de giros, por padrão é um giro completo de 360°
+        """
+        # # Ajustar o sinal do raio para o sentido da rotação
+        # if direction == "left":
+        #     radius = -radius
+
+        # Calcula ômega (w)
+        omega = linear_velocity / radius
+
+        # Calcula velocidades das rodas
+        vr = linear_velocity * (abs(radius) + self.l) / abs(radius)
+        vl = linear_velocity * (abs(radius) - self.l) / abs(radius)
+
+        if direction == "right":
+            vr, vl = vl, vr  # Inverte as velocidades para rotação esquerda
+
+        # Define o tempo total da simulação
+        total_time = turns * 2 * np.pi / abs(omega)  # Uma volta completa
+        steps = int(total_time / self.dt)
+
+        # Cria os vetores de velocidade
+        vr_array = np.full(steps, vr)
+        vl_array = np.full(steps, vl)
+
+        # Calcula a trajetória
+        self.calculate_trajectory(vr_array, vl_array)
+
+    def plot_trajectory(self):
+        """
+        Plota a trajetória do robô com base nas posições calculadas.
+        """
+        plt.figure(figsize=(10, 6))
+        plt.plot(self.x, self.y, marker='o', linestyle='-', color='b')
+        plt.xlabel('Posição X [m]')
+        plt.ylabel('Posição Y [m]')
+        plt.title('Trajetória do Robô Móvel')
+        plt.grid()
+        plt.axis('equal')
+        plt.show()
+
+    def plot_trajectory_with_gradient(self):
+        """
+        Plota a trajetória do robô com degradê de cores para indicar o sentido do movimento.
+        O degradê vai de vermelho (início) até azul (fim).
+        """
+        points = np.array([self.x, self.y]).T.reshape(-1, 1, 2)
+        segments = np.concatenate([points[:-1], points[1:]], axis=1)
+
+        # Criar um LineCollection com degradê de cores
+        norm = plt.Normalize(0, len(self.x) - 1)
+        lc = LineCollection(segments, cmap="coolwarm", norm=norm)  # Degradê vermelho-azul
+        lc.set_array(np.arange(len(self.x)))  # Vincula as cores ao índice de progresso
+        lc.set_linewidth(2)
+
+        # Criar a figura e adicionar a coleção de linhas
+        plt.figure(figsize=(10, 6))
+        plt.gca().add_collection(lc)
+        plt.plot(self.x, self.y, marker='o', markersize=2, color='none')  # Pontos discretos
+
+        # Configurações do gráfico
+        plt.xlabel('Posição X [m]')
+        plt.ylabel('Posição Y [m]')
+        plt.title('Trajetória do Robô com Degradê Azul-Vermelho')
+        plt.grid()
+        plt.axis('equal')
+        plt.colorbar(lc, label="Progresso do Movimento")
+        plt.show()
 
 class RobotSimulator(tk.Tk):
     def __init__(self):
