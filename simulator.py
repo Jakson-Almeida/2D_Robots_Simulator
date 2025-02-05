@@ -28,8 +28,8 @@ class DifferentialRobot:
         """
         for i in range(len(vr)):
             # Incremento de deslocamento linear e angular
-            delta_s = (vr[i] + vl[i]) / 2 * self.dt
-            delta_theta = (vr[i] - vl[i]) / (2 * self.l) * self.dt
+            delta_s = ((vr[i] + vl[i]) / 2) * self.dt
+            delta_theta = ((vr[i] - vl[i]) / (2 * self.l)) * self.dt
 
             # Calcular novos valores de x, y, e theta
             x_new = self.x[-1] + delta_s * np.cos(self.theta[-1] + delta_theta / 2)
@@ -51,6 +51,8 @@ class DifferentialRobot:
         :param direction: Sentido de rotação da trajetória ("right" ou "left")
         :param turns: Número de giros, por padrão é um giro completo de 360°
         """
+        radius = abs(radius)
+        
         # # Ajustar o sinal do raio para o sentido da rotação
         # if direction == "left":
         #     radius = -radius
@@ -59,8 +61,8 @@ class DifferentialRobot:
         omega = linear_velocity / radius
 
         # Calcula velocidades das rodas
-        vr = linear_velocity * (abs(radius) + self.l) / abs(radius)
-        vl = linear_velocity * (abs(radius) - self.l) / abs(radius)
+        vr = linear_velocity * (radius + self.l) / radius
+        vl = linear_velocity * (radius - self.l) / radius
 
         if direction == "right":
             vr, vl = vl, vr  # Inverte as velocidades para rotação esquerda
