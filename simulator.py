@@ -1,9 +1,11 @@
 import json
 import tkinter as tk
 from tkinter import ttk, messagebox
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
+from PIL import Image, ImageTk
 
 class DifferentialRobot:
     def __init__(self, wheel_distance=0.1, initial_pose=(0, 0, 0), time_step=0.01):
@@ -143,6 +145,7 @@ class RobotSimulator(tk.Tk):
         self.current_step = 0
         self.simulating = False
         self.robot = None
+        self.robot_img = None
         
         # Carregar configurações
         self.load_config()
@@ -192,7 +195,8 @@ class RobotSimulator(tk.Tk):
     
     def update_robot(self):
         if self.robot_type.get() == "Differential":
-            self.robot = DifferentialRobot(wheel_distance=0.5, initial_pose=(300, 550, np.deg2rad(-90)), time_step=0.1)
+            self.robot = DifferentialRobot(wheel_distance=0.5, initial_pose=(0, 0, np.deg2rad(0)), time_step=0.1)
+            self.robot_img = Image.open("data/dif_robot.png")  # Altere para seu arquivo
             self.draw_robot()
     
     def show_car_message(self):
@@ -200,20 +204,24 @@ class RobotSimulator(tk.Tk):
     
     def draw_robot(self):
         self.canvas.delete("robot")
-        size = 20
-        x, y = self.robot.x[-1], self.robot.y[-1]
-        theta = self.robot.theta[-1]
+        # Rotacionar imagem
+        angle_deg = math.degrees(self.robot['theta']) 
+        rotated_img = self.robot_img.rotate(-angle_deg + 90, expand=True, resample=Image.BICUBIC)
         
-        # Desenhar triângulo representando o robô
-        points = [
-            x + size * np.cos(theta),
-            y + size * np.sin(theta),
-            x + size * np.cos(theta + np.pi*2/3),
-            y + size * np.sin(theta + np.pi*2/3),
-            x + size * np.cos(theta - np.pi*2/3),
-            y + size * np.sin(theta - np.pi*2/3)
-        ]
-        self.canvas.create_polygon(points, fill="blue", tags="robot")
+        # Converter para formato Tkinter
+        self.tk_image = ImageTk.PhotoImage(rotated_img)
+        
+        # Atualizar no canvas
+        if self.canvas_image:
+            self.canvas.delete(self.canvas_image)
+            
+        self.canvas_image = self.canvas.create_image(
+            self.robot['x'],
+            self.robot['y'],
+            image=self.tk_image,
+            anchor='center'
+        )
+
     
     def add_straight_line(self):
         dialog = tk.Toplevel()
