@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 
 class DifferentialRobot:
-    def __init__(self, wheel_distance, time_step):
+    def __init__(self, wheel_distance=0.1, initial_pose=(0, 0, 0), time_step=0.01):
         """
         Inicializa o robô com os parâmetros básicos.
 
@@ -18,6 +18,7 @@ class DifferentialRobot:
         self.x = [0]
         self.y = [0]
         self.theta = [0]
+        self.setPose(x=initial_pose[0], y=initial_pose[1], theta=initial_pose[2])
 
     def calculate_trajectory(self, vr, vl):
         """
@@ -40,6 +41,16 @@ class DifferentialRobot:
             self.x.append(x_new)
             self.y.append(y_new)
             self.theta.append(theta_new)
+    def setPose(self, x=0, y=0, theta=0, all=False):
+        if all:
+          for i, _ in enumerate(self.x):
+            self.x[i] = x
+            self.y[i] = y
+            self.theta[i] = theta
+          return
+        self.x[-1] = x
+        self.y[-1] = y
+        self.theta[-1] = theta
 
     def calculate_circular_trajectory(self, radius, linear_velocity, direction="right", turns=1):
         """
@@ -52,7 +63,7 @@ class DifferentialRobot:
         :param turns: Número de giros, por padrão é um giro completo de 360°
         """
         radius = abs(radius)
-        
+
         # # Ajustar o sinal do raio para o sentido da rotação
         # if direction == "left":
         #     radius = -radius
@@ -123,7 +134,7 @@ class RobotSimulator(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Robot Simulator")
-        self.geometry("1000x800")
+        self.geometry("1100x600")
         
         # Configurações iniciais
         self.robot_type = tk.StringVar(value="Differential")
@@ -181,7 +192,7 @@ class RobotSimulator(tk.Tk):
     
     def update_robot(self):
         if self.robot_type.get() == "Differential":
-            self.robot = DifferentialRobot(wheel_distance=0.5, time_step=0.1)
+            self.robot = DifferentialRobot(wheel_distance=0.5, initial_pose=(300, 550, np.deg2rad(-90)), time_step=0.1)
             self.draw_robot()
     
     def show_car_message(self):
@@ -261,7 +272,7 @@ class RobotSimulator(tk.Tk):
     
     def reset_simulation(self):
         self.canvas.delete("all")
-        self.robot = DifferentialRobot(wheel_distance=0.5, time_step=0.1)
+        self.robot = DifferentialRobot(wheel_distance=0.5, initial_pose=(300, 550, 0), time_step=0.1)
         self.trajectory = []
         self.current_step = 0
         self.draw_robot()
