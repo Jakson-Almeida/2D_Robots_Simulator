@@ -197,31 +197,39 @@ class RobotSimulator(tk.Tk):
         if self.robot_type.get() == "Differential":
             self.robot = DifferentialRobot(wheel_distance=0.5, initial_pose=(0, 0, np.deg2rad(0)), time_step=0.1)
             self.robot_img = Image.open("data/dif_robot.png")  # Altere para seu arquivo
+            self.carregar_imagem()
             self.draw_robot()
     
     def show_car_message(self):
         messagebox.showinfo("Info", "Car-like robot implementation is coming soon!")
     
+    def carregar_imagem(self, name="dif_robot_rm.png"):
+        caminho = "data/" + name
+        if not caminho:
+            return
+
+        # Carregar e redimensionar a imagem
+        imagem = Image.open(caminho)
+        largura_desejada = 250
+        proporcao = largura_desejada / imagem.width
+        nova_altura = int(imagem.height * proporcao)
+        self.imagem_original = imagem.resize((largura_desejada, nova_altura), Image.LANCZOS)
+
+        # Converter para formato do Tkinter
+        self.imagem_tk = ImageTk.PhotoImage(self.imagem_original)
+
+        # Se já houver uma imagem no canvas, remove antes de adicionar a nova
+        if self.imagem_id:
+            self.canvas.delete(self.imagem_id)
+
+        # Criar imagem no canvas e armazenar seu ID
+        self.imagem_id = self.canvas.create_image(250, 250, anchor=tk.CENTER, image=self.imagem_tk)
+    
     def draw_robot(self):
         self.canvas.delete("robot")
-        # Rotacionar imagem
-        angle_deg = math.degrees(self.robot['theta']) 
-        rotated_img = self.robot_img.rotate(-angle_deg + 90, expand=True, resample=Image.BICUBIC)
-        
-        # Converter para formato Tkinter
-        self.tk_image = ImageTk.PhotoImage(rotated_img)
-        
-        # Atualizar no canvas
-        if self.canvas_image:
-            self.canvas.delete(self.canvas_image)
-            
-        self.canvas_image = self.canvas.create_image(
-            self.robot['x'],
-            self.robot['y'],
-            image=self.tk_image,
-            anchor='center'
-        )
-
+        size = 20
+        x, y = self.robot.x[-1], self.robot.y[-1]
+        theta = self.robot.theta[-1]
     
     def add_straight_line(self):
         dialog = tk.Toplevel()
