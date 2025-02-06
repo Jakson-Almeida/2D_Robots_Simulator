@@ -195,7 +195,7 @@ class RobotSimulator(tk.Tk):
     
     def update_robot(self):
         if self.robot_type.get() == "Differential":
-            self.robot = DifferentialRobot(wheel_distance=0.5, initial_pose=(300, 500, np.deg2rad(90)), time_step=0.1)
+            self.robot = DifferentialRobot(wheel_distance=0.5, initial_pose=(300, 500, np.rad2deg(90)), time_step=0.1)
             self.robot_img = Image.open("data/dif_robot.png")  # Altere para seu arquivo
             # Variáveis para armazenar a imagem carregada
             self.imagem_original = None
@@ -232,13 +232,13 @@ class RobotSimulator(tk.Tk):
     def draw_robot(self):
         size = 20
         x, y = self.robot.x[-1], self.robot.y[-1]
-        theta = self.robot.theta[-1]
+        theta = self.robot.theta[-1]+90
         if self.imagem_id and self.imagem_original:
             # Mover a imagem para seguir o mouse
             self.canvas.coords(self.imagem_id, x, y)
 
             # Rotacionar a imagem
-            imagem_rotacionada = self.imagem_original.rotate(90+np.rad2deg(theta), resample=Image.BICUBIC)
+            imagem_rotacionada = self.imagem_original.rotate(theta, resample=Image.BICUBIC)
 
             # Converter para formato do Tkinter
             self.imagem_tk = ImageTk.PhotoImage(imagem_rotacionada)
