@@ -195,8 +195,12 @@ class RobotSimulator(tk.Tk):
     
     def update_robot(self):
         if self.robot_type.get() == "Differential":
-            self.robot = DifferentialRobot(wheel_distance=0.5, initial_pose=(0, 0, np.deg2rad(0)), time_step=0.1)
+            self.robot = DifferentialRobot(wheel_distance=0.5, initial_pose=(300, 500, np.deg2rad(90)), time_step=0.1)
             self.robot_img = Image.open("data/dif_robot.png")  # Altere para seu arquivo
+            # Variáveis para armazenar a imagem carregada
+            self.imagem_original = None
+            self.imagem_tk = None
+            self.imagem_id = None
             self.carregar_imagem()
             self.draw_robot()
     
@@ -226,10 +230,19 @@ class RobotSimulator(tk.Tk):
         self.imagem_id = self.canvas.create_image(250, 250, anchor=tk.CENTER, image=self.imagem_tk)
     
     def draw_robot(self):
-        self.canvas.delete("robot")
         size = 20
         x, y = self.robot.x[-1], self.robot.y[-1]
         theta = self.robot.theta[-1]
+        if self.imagem_id and self.imagem_original:
+            # Mover a imagem para seguir o mouse
+            self.canvas.coords(self.imagem_id, x, y)
+
+            # Rotacionar a imagem
+            imagem_rotacionada = self.imagem_original.rotate(90+np.rad2deg(theta), resample=Image.BICUBIC)
+
+            # Converter para formato do Tkinter
+            self.imagem_tk = ImageTk.PhotoImage(imagem_rotacionada)
+            self.canvas.itemconfig(self.imagem_id, image=self.imagem_tk)
     
     def add_straight_line(self):
         dialog = tk.Toplevel()
